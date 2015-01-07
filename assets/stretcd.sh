@@ -20,8 +20,13 @@ ETCD_SERVER="${ETCD_SERVER:-127.0.0.1:4001}"
 operation=${ETCD_ACTION}
 
 if   [ "$operation" == "populate" ]; then
+    vopt="-s"
     keys=${STRETCD_KEYS:-1}
     size=${STRETCD_SIZE:-1024}
+    verbose=`echo ${VERBOSE:-"false"} | tr a-z A-Z`
+    if [ "$verbose" == "TRUE" ]; then
+	vopt=""
+    fi
     if [ $size -gt 90000 ]; then
         infile="true"
         temp=$(mktemp  -d)
@@ -57,8 +62,10 @@ for x  in $(seq 1 ${keys}); do
         args="$xpad"
     fi
     
-    curl -X $cmd -L  "http://${ETCD_SERVER}/v2/keys/stretcd/${args}" "${payload}"
-    echo curl -X $cmd -L  \"http://${ETCD_SERVER}/v2/keys/stretcd/${args}\" \"${payload}\"
+    curl -X $cmd -L $vopt  "http://${ETCD_SERVER}/v2/keys/stretcd/${args}" "${payload}"
+    if [ "$verbose" == "TRUE" ]; then
+	echo curl -X $cmd -L $vopt  \"http://${ETCD_SERVER}/v2/keys/stretcd/${args}\" \"${payload}\"
+    fi
 done
 
 
