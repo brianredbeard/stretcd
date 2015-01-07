@@ -57,8 +57,8 @@ for x  in $(seq 1 ${keys}); do
         args="$xpad"
     fi
     
-    curl -X $cmd  http://${ETCD_SERVER}/v2/keys/stretcd/${args} ${payload}
-    echo curl -X $cmd  http://${ETCD_SERVER}/v2/keys/stretcd/${args} ${payload}
+    curl -X $cmd -L  "http://${ETCD_SERVER}/v2/keys/stretcd/${args}" "${payload}"
+    echo curl -X $cmd -L  \"http://${ETCD_SERVER}/v2/keys/stretcd/${args}\" \"${payload}\"
 done
 
 
