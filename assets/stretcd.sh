@@ -19,9 +19,20 @@ ETCD_SERVER="${ETCD_SERVER:-127.0.0.1:4001}"
 
 operation=${ETCD_ACTION}
 
+if [ "$1" == "help" ]; then
+    operation="help"
+fi
+
+ping -c 1 -t 1 ${ETCD_SERVER%:*} 2>&1 > /dev/null
+
+if [ "$?" -gt 0 ]; then
+	echo "Could not contact host"
+	exit 1
+fi
 if   [ "$operation" == "populate" ]; then
     keys=${STRETCD_KEYS:-1}
     size=${STRETCD_SIZE:-1024}
+    # unfortunately if the size is greater than ~90,000 bits things get larger than 
     if [ $size -gt 90000 ]; then
         infile="true"
         temp=$(mktemp  -d)
@@ -35,6 +46,33 @@ if   [ "$operation" == "populate" ]; then
 elif [ "$operation" == "destroy" ]; then
     cmd="DELETE"
     args="?recursive=true&directory=true"
+
+
+elif [ "$operation" == "help" ]; then
+    cat << EOIF
+    # This script reads in a series of environment variables and uses them to
+    # stress test an etcd server.  The idea is to run this container in parallel
+    # on a number of hosts concurrently to determine performance and overall health
+    #
+    # This script expects the following environment variables to be set:
+    #
+    #   ETCD_SERVER     The server to which to connect
+    #   ETCD_ACTION     The action to perform (populate|destroy)
+    #   STRETCD_KEYS    The total number of keys to populate
+    #   STRETCD_SIZE    The size of each individual key in bytes
+    #
+    # This script will read a number of bytes from /dev/random and convert it to
+    # RFC4648 compliant base64 data and then create a key populated with that data
+    #
+    # Examples:
+    # Populate the cluster with 100 keys of 1KB in size - 
+    # $ docker run --rm -e ETCD_SERVER=172.17.42.1:4001 -e ETCD_ACTION=populate -e STRETCD_KEYS=100 -e STRETCD_SIZE=1024  quay.io/brianredbeard/stretcd
+    #
+    # Clean up the mess of all 100 keys in /stretcd
+    # $ docker run --rm -e ETCD_SERVER=172.17.42.1:4001 -e ETCD_ACTION=destroy quay.io/brianredbeard/stretcd:latest
+    #
+EOIF
+    exit 1
 
 else 
     echo "Unknown operation"
