@@ -1,4 +1,4 @@
-FROM    https://quay.io/brianredbeard/corebox:latest
+FROM    corebox:latest
 
 MAINTAINER "Brian Harrington" <brian.harrington@coreos.com> @brianredbeard
 
