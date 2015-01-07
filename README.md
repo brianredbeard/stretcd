@@ -36,3 +36,11 @@ $ docker run --rm -e ETCD_SERVER=172.17.42.1:4001 -e ETCD_ACTION=destroy quay.io
 
 ## Building
 
+Perform some variation on:
+
+```
+$ git pull https://github.com/brianredbeard/stretcd.git
+$ cd stretcd
+$ docker build .
+```
+
