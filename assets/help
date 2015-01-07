@@ -1,0 +1,26 @@
+#!/bin/bash
+
+cat << EOF
+This script reads in a series of environment variables and uses them to
+stress test an etcd server.  The idea is to run this container in parallel
+on a number of hosts concurrently to determine performance and overall health
+
+This script expects the following environment variables to be set:
+
+  ETCD_SERVER     The server to which to connect
+  ETCD_ACTION     The action to perform (populate|destroy)
+  STRETCD_KEYS    The total number of keys to populate
+  STRETCD_SIZE    The size of each individual key in bytes
+
+This script will read a number of bytes from /dev/random and convert it to
+RFC4648 compliant base64 data and then create a key populated with that data
+
+Examples:
+
+Populate a cluster:
+$ docker run --rm -e ETCD_SERVER=172.17.42.1:4001 -e ETCD_ACTION=populate -e STRETCD_KEYS=100 -e STRETCD_SIZE=1024  quay.io/brianredbeard/stretcd
+
+Clean up a cluster:
+$ docker run --rm -e ETCD_SERVER=172.17.42.1:4001 -e ETCD_ACTION=destroy quay.io/brianredbeard/stretcd
+
+EOF
