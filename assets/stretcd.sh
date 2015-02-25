@@ -20,17 +20,19 @@ ETCD_SERVER="${ETCD_SERVER:-127.0.0.1:4001}"
 operation=${ETCD_ACTION}
 
 if   [ "$operation" == "populate" ]; then
-    vopt="-s"
+    header="#ip:port\ttime_total\tsize_upload"  
+    vopt="-s -w %{remote_ip}:%{remote_port}\t%{time_total}\t%{size_upload}\\n -o /dev/null"
     keys=${STRETCD_KEYS:-1}
     size=${STRETCD_SIZE:-1024}
     verbose=`echo ${VERBOSE:-"false"} | tr a-z A-Z`
     if [ "$verbose" == "TRUE" ]; then
-	vopt=""
+        vopt=""
+    else
+        echo -e $header
     fi
     if [ $size -gt 90000 ]; then
         infile="true"
         temp=$(mktemp  -d)
-            echo "temp=$temp"
     fi
 
     kchar=${#keys}
@@ -40,7 +42,6 @@ if   [ "$operation" == "populate" ]; then
 elif [ "$operation" == "destroy" ]; then
     cmd="DELETE"
     args="?recursive=true&directory=true"
-
 else 
     echo "Unknown operation"
     exit 1
@@ -52,25 +53,18 @@ for x  in $(seq 1 ${keys}); do
     if [ -n "$keys" ]; then
         # Encode data from urandom following rules from RFC4648
         if [ $infile ]; then
-            echo -n "value=" > ${temp}/${xpad}
             dd if=/dev/urandom count=1 bs=$size 2>/dev/null | base64 -w0  | sed -e 's/+/-/g' -e 's/\//_/g' >> ${temp}/${xpad}
-            payload="-d @${temp}/${xpad}"
+            payload="--data-urlencode value@${temp}/${xpad}"
         else
             payload="-d value=$(dd if=/dev/urandom count=1 bs=$size 2>/dev/null | base64 -w0  | sed -e 's/+/-/g' -e 's/\//_/g' )"
         fi
 
         args="$xpad"
     fi
-    
-    curl -X $cmd -L $vopt  "http://${ETCD_SERVER}/v2/keys/stretcd/${args}" "${payload}"
+    curl -X $cmd -L $vopt ${payload}  "http://${ETCD_SERVER}/v2/keys/stretcd/${args}" 
     if [ "$verbose" == "TRUE" ]; then
-	echo curl -X $cmd -L $vopt  \"http://${ETCD_SERVER}/v2/keys/stretcd/${args}\" \"${payload}\"
+	    echo curl -X $cmd -L $vopt   ${payload} \"http://${ETCD_SERVER}/v2/keys/stretcd/${args}\" 
     fi
 done
 
-
-if [ $infile ]; then
-    #rm -rf ${temp}
-    echo "in file"
-fi
-
+# vim: set ts=4 sw=4 expandtab:
